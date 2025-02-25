@@ -10,7 +10,7 @@ use tokio::net::TcpListener;
 async fn main() {
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://root:root@localhost/postgres")
+        .connect("postgres://admin:admin@localhost/postgres")
         .await
         .expect("Error connecting to database");
 
@@ -35,12 +35,19 @@ struct Post {
     title: String,
     text: String,
     date: DateTime<Utc>,
+    language_id: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+struct Language {
+    id: i32,
+    name: String,
 }
 
 async fn root(State(state): State<AppState>) -> Json<Vec<Post>> {
     let db_pool = &state.db_pool;
 
-    let post = sqlx::query_as::<_, Post>("SELECT * FROM blog.post")
+    let post = sqlx::query_as::<_, Post>("SELECT * FROM blog.posts")
         .fetch_all(&**db_pool)
         .await
         .expect("Error fetching post");
